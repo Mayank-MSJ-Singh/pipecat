@@ -62,7 +62,7 @@ Think of it like a factory assembly line:
 
 ## 2. Project Structure
 
-All source code lives under [`src/pipecat/`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/__init__.py).
+All source code lives under [`src/pipecat/`](src/pipecat/__init__.py).
 
 ```
 src/pipecat/
@@ -149,7 +149,7 @@ src/pipecat/
 
 ## 3. The Foundation: BaseObject
 
-📄 **Source**: [base_object.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/utils/base_object.py)
+📄 **Source**: [base_object.py](src/pipecat/utils/base_object.py)
 
 Every major class in Pipecat — processors, services, transports, observers — inherits from `BaseObject`. It provides three critical capabilities:
 
@@ -184,7 +184,7 @@ async def handle_connect(service, frame):
 await self._call_event_handler("on_connected", frame)
 ```
 
-**Sync vs Async events** ([base_object.py L225-L240](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/utils/base_object.py#L225-L240)):
+**Sync vs Async events** ([base_object.py L225-L240](src/pipecat/utils/base_object.py#L225-L240)):
 - **Async** (default): Handler runs in a background `asyncio.Task`. The caller doesn't wait — fire and forget.
 - **Sync** (`sync=True`): Handler runs *immediately* inline. Must be fast — blocks the pipeline.
 
@@ -197,7 +197,7 @@ task = self.create_task(my_coroutine(), "descriptive_name")
 await self.cancel_task(task, timeout=1.0)
 ```
 
-**Why**: The `TaskManager` ([base_object.py L126-L154](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/utils/base_object.py#L126-L154)) tracks all tasks and cancels them during shutdown. Raw `asyncio.create_task()` creates orphaned tasks that can leak.
+**Why**: The `TaskManager` ([base_object.py L126-L154](src/pipecat/utils/base_object.py#L126-L154)) tracks all tasks and cancels them during shutdown. Raw `asyncio.create_task()` creates orphaned tasks that can leak.
 
 ### 3.4 Lifecycle: `setup()` and `cleanup()`
 
@@ -216,7 +216,7 @@ async def cleanup(self):                  # Wait for event tasks, release resour
 
 ## 4. Frames: The Data Currency
 
-📄 **Source**: [frames.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py)
+📄 **Source**: [frames.py](src/pipecat/frames/frames.py)
 
 Frames are the single most important concept in Pipecat. **Every piece of data** — audio, text, images, control signals — travels through the pipeline as a Frame object.
 
@@ -283,7 +283,7 @@ Frame (base)
 
 ### 4.3 SystemFrame: The VIP Lane
 
-📄 [frames.py — SystemFrame](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L96-L103)
+📄 [frames.py — SystemFrame](src/pipecat/frames/frames.py#L96-L103)
 
 ```python
 @dataclass
@@ -297,12 +297,12 @@ class SystemFrame(Frame):
 
 | Frame | Purpose | Direction |
 |-------|---------|-----------|
-| [`InterruptionFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L970) | Signal that the user interrupted | Downstream |
-| [`CancelFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L884) | Hard-stop the entire pipeline | Downstream |
-| [`StartFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L858) | Initialize all processors | Downstream |
-| [`MetricsFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L1119) | Performance data (TTFB, etc.) | Upstream |
-| [`ErrorFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L901) | Report errors upstream | Upstream |
-| [`InputAudioRawFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L1246) | Raw audio from user's mic | Downstream |
+| [`InterruptionFrame`](src/pipecat/frames/frames.py#L970) | Signal that the user interrupted | Downstream |
+| [`CancelFrame`](src/pipecat/frames/frames.py#L884) | Hard-stop the entire pipeline | Downstream |
+| [`StartFrame`](src/pipecat/frames/frames.py#L858) | Initialize all processors | Downstream |
+| [`MetricsFrame`](src/pipecat/frames/frames.py#L1119) | Performance data (TTFB, etc.) | Upstream |
+| [`ErrorFrame`](src/pipecat/frames/frames.py#L901) | Report errors upstream | Upstream |
+| [`InputAudioRawFrame`](src/pipecat/frames/frames.py#L1246) | Raw audio from user's mic | Downstream |
 
 ### 4.4 Lifecycle Frames: Start, End, Stop, Cancel
 
@@ -336,7 +336,7 @@ class CancelFrame(SystemFrame):
 
 ### 4.5 The Uninterruptible Mixin
 
-📄 [frames.py — UninterruptibleFrame](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L137-L148)
+📄 [frames.py — UninterruptibleFrame](src/pipecat/frames/frames.py#L137-L148)
 
 ```python
 @dataclass
@@ -350,12 +350,12 @@ When an interruption occurs, all pending frames in processor queues are **discar
 
 | Frame | What it carries | Created by |
 |-------|----------------|------------|
-| [`InputAudioRawFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L1246) | Raw audio from user's mic | Transport Input |
-| [`TranscriptionFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L416) | User's speech as text | STT Service |
-| [`LLMContextFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L499) | Context (messages + tools) to send to LLM | Context Aggregator |
-| [`TextFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L294) | Generic text (also base for LLMTextFrame) | LLM Service |
-| [`TTSAudioRawFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L232) | Synthesized speech audio | TTS Service |
-| [`OutputAudioRawFrame`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py#L192) | Audio to send to user | Transport Output |
+| [`InputAudioRawFrame`](src/pipecat/frames/frames.py#L1246) | Raw audio from user's mic | Transport Input |
+| [`TranscriptionFrame`](src/pipecat/frames/frames.py#L416) | User's speech as text | STT Service |
+| [`LLMContextFrame`](src/pipecat/frames/frames.py#L499) | Context (messages + tools) to send to LLM | Context Aggregator |
+| [`TextFrame`](src/pipecat/frames/frames.py#L294) | Generic text (also base for LLMTextFrame) | LLM Service |
+| [`TTSAudioRawFrame`](src/pipecat/frames/frames.py#L232) | Synthesized speech audio | TTS Service |
+| [`OutputAudioRawFrame`](src/pipecat/frames/frames.py#L192) | Audio to send to user | Transport Output |
 
 ### 4.7 Frame Direction
 
@@ -373,7 +373,7 @@ class FrameDirection(Enum):
 
 ## 5. FrameProcessor: The Processing Engine
 
-📄 **Source**: [frame_processor.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/processors/frame_processor.py)
+📄 **Source**: [frame_processor.py](src/pipecat/processors/frame_processor.py)
 
 This is **the most important class in the entire framework**. Every component — STT, LLM, TTS, transports, aggregators — is a `FrameProcessor`. Understanding this class is understanding Pipecat.
 
@@ -403,7 +403,7 @@ class FrameProcessor(BaseObject):
 
 ### 5.2 The Dual-Queue Architecture
 
-📄 [frame_processor.py L246-L270](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/processors/frame_processor.py#L246-L270) (init), [L996-L1043](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/processors/frame_processor.py#L996-L1043) (task handlers)
+📄 [frame_processor.py L246-L270](src/pipecat/processors/frame_processor.py#L246-L270) (init), [L996-L1043](src/pipecat/processors/frame_processor.py#L996-L1043) (task handlers)
 
 Each processor has **two input paths** for different priority levels:
 
@@ -496,7 +496,7 @@ async def push_frame(self, frame, direction=FrameDirection.DOWNSTREAM):
 
 ### 5.5 Interruption Handling
 
-📄 [frame_processor.py — _start_interruption](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/processors/frame_processor.py#L842-L867)
+📄 [frame_processor.py — _start_interruption](src/pipecat/processors/frame_processor.py#L842-L867)
 
 When an `InterruptionFrame` arrives (it's a `SystemFrame`, so it gets fast-path processing):
 
@@ -559,7 +559,7 @@ class TextUppercaser(FrameProcessor):
 
 ## 6. Pipeline: Chaining Processors
 
-📄 **Source**: [pipeline.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/pipeline.py)
+📄 **Source**: [pipeline.py](src/pipecat/pipeline/pipeline.py)
 
 A Pipeline is itself a `FrameProcessor` that chains multiple processors into a linear sequence.
 
@@ -589,8 +589,8 @@ Internally, `Pipeline.__init__()` links processors in a chain:
 ### 6.2 Source and Sink Processors
 
 The Pipeline wraps your processors with two hidden processors:
-- **Source** ([pipeline.py L25-L50](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/pipeline.py#L25-L50)): Entry point. Routes frames into the chain.
-- **Sink** ([pipeline.py L55-L80](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/pipeline.py#L55-L80)): Exit point. Catches frames that fall off the end.
+- **Source** ([pipeline.py L25-L50](src/pipecat/pipeline/pipeline.py#L25-L50)): Entry point. Routes frames into the chain.
+- **Sink** ([pipeline.py L55-L80](src/pipecat/pipeline/pipeline.py#L55-L80)): Exit point. Catches frames that fall off the end.
 
 **Why hidden wrappers?** They handle:
 1. Lifecycle management — `setup()` and `cleanup()` propagation to all child processors
@@ -608,7 +608,7 @@ outer_pipeline = Pipeline([transport.input(), inner_pipeline, transport.output()
 
 ### 6.4 ParallelPipeline
 
-📄 **Source**: [parallel_pipeline.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/parallel_pipeline.py)
+📄 **Source**: [parallel_pipeline.py](src/pipecat/pipeline/parallel_pipeline.py)
 
 Runs multiple pipeline branches simultaneously. A frame entering a ParallelPipeline is sent to **all branches** concurrently:
 
@@ -631,7 +631,7 @@ Input ───────▶│                        │───▶ Output 
 
 ### 7.1 PipelineWorker — Running a Pipeline
 
-📄 **Source**: [worker.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/worker.py)
+📄 **Source**: [worker.py](src/pipecat/pipeline/worker.py)
 
 A `PipelineWorker` is the runtime wrapper for a Pipeline. It handles:
 - Sending the initial `StartFrame` to kick off the pipeline
@@ -655,11 +655,11 @@ await runner.add_workers(worker)
 await runner.run()
 ```
 
-**Heartbeat mechanism** ([worker.py L1161-L1187](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/worker.py#L1161-L1187)): The worker periodically pushes a `HeartbeatFrame` into the pipeline source. The sink processor catches it. If the heartbeat doesn't arrive within `heartbeats_monitor_secs`, the pipeline is assumed stuck.
+**Heartbeat mechanism** ([worker.py L1161-L1187](src/pipecat/pipeline/worker.py#L1161-L1187)): The worker periodically pushes a `HeartbeatFrame` into the pipeline source. The sink processor catches it. If the heartbeat doesn't arrive within `heartbeats_monitor_secs`, the pipeline is assumed stuck.
 
 ### 7.2 BaseWorker — The Worker Contract
 
-📄 **Source**: [base_worker.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/base_worker.py)
+📄 **Source**: [base_worker.py](src/pipecat/workers/base_worker.py)
 
 `BaseWorker` is the abstract base class for all workers. `PipelineWorker` inherits from it.
 
@@ -685,7 +685,7 @@ class BaseWorker:
 
 ### 7.3 WorkerRunner — The Top-Level Entry Point
 
-📄 **Source**: [runner.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/runner.py)
+📄 **Source**: [runner.py](src/pipecat/workers/runner.py)
 
 The `WorkerRunner` is where everything starts. It:
 1. Creates and owns the `WorkerBus` (message bus)
@@ -703,11 +703,11 @@ await runner.add_workers(pipeline_worker_1, pipeline_worker_2)
 await runner.run()
 ```
 
-**Signal handling** ([runner.py L467+](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/runner.py#L467)):
+**Signal handling** ([runner.py L467+](src/pipecat/workers/runner.py#L467)):
 - **First SIGINT/SIGTERM**: Graceful shutdown — sends `EndFrame` to all pipelines
 - **Second signal**: Hard cancel — sends `CancelFrame` immediately
 
-**`auto_end` mode** ([runner.py L195-L234](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/runner.py#L195-L234)):
+**`auto_end` mode** ([runner.py L195-L234](src/pipecat/workers/runner.py#L195-L234)):
 - `auto_end=True` (default): Runner ends when all root workers finish. Good for single-session bots.
 - `auto_end=False`: Runner stays alive. Good for servers (FastAPI) that create workers per session.
 
@@ -741,7 +741,7 @@ Transports are how audio/video **enters and exits** the pipeline. They bridge th
 
 ### 8.1 BaseTransport
 
-📄 **Source**: [base_transport.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/transports/base_transport.py)
+📄 **Source**: [base_transport.py](src/pipecat/transports/base_transport.py)
 
 ```python
 class BaseTransport(BaseObject):
@@ -761,7 +761,7 @@ pipeline = Pipeline([
 
 ### 8.2 TransportParams
 
-📄 [base_transport.py — TransportParams](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/transports/base_transport.py#L25-L89)
+📄 [base_transport.py — TransportParams](src/pipecat/transports/base_transport.py#L25-L89)
 
 ```python
 class TransportParams(BaseModel):
@@ -778,7 +778,7 @@ class TransportParams(BaseModel):
 
 ### 8.3 BaseInputTransport
 
-📄 **Source**: [base_input.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/transports/base_input.py)
+📄 **Source**: [base_input.py](src/pipecat/transports/base_input.py)
 
 Receives raw audio/video from external sources and pushes `InputAudioRawFrame` / `InputImageRawFrame` downstream.
 
@@ -790,7 +790,7 @@ Receives raw audio/video from external sources and pushes `InputAudioRawFrame` /
 
 ### 8.4 BaseOutputTransport & MediaSender
 
-📄 **Source**: [base_output.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/transports/base_output.py)
+📄 **Source**: [base_output.py](src/pipecat/transports/base_output.py)
 
 The output transport is more complex because it must handle:
 - **Audio chunking**: Splits large audio frames into 10ms×N chunks for smooth playback
@@ -807,7 +807,7 @@ OutputAudioRawFrame ──▶ MediaSender ──▶ Audio chunk buffer ──▶
                            └── Resampling (if sample rates differ)
 ```
 
-**MediaSender** ([base_output.py L388-L460](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/transports/base_output.py#L388-L460)): Each output destination gets its own MediaSender with independent audio/video/clock tasks.
+**MediaSender** ([base_output.py L388-L460](src/pipecat/transports/base_output.py#L388-L460)): Each output destination gets its own MediaSender with independent audio/video/clock tasks.
 
 ### 8.5 Available Transports
 
@@ -823,7 +823,7 @@ OutputAudioRawFrame ──▶ MediaSender ──▶ Audio chunk buffer ──▶
 
 ## 9. Services: AI Integrations
 
-📄 **Source**: [ai_service.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/ai_service.py)
+📄 **Source**: [ai_service.py](src/pipecat/services/ai_service.py)
 
 Services are FrameProcessors that wrap AI provider APIs. They follow an inheritance hierarchy:
 
@@ -839,7 +839,7 @@ FrameProcessor
 
 ### 9.1 AIService Base
 
-📄 [ai_service.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/ai_service.py#L30-L100)
+📄 [ai_service.py](src/pipecat/services/ai_service.py#L30-L100)
 
 Provides **settings management** for all AI services:
 
@@ -852,11 +852,11 @@ class AIService(FrameProcessor):
             await self._set_settings(frame.settings)      # Full replace
 ```
 
-Services use `ServiceSettings` ([settings.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/settings.py)) with runtime validation and delta support — you can update just one parameter without replacing the entire config.
+Services use `ServiceSettings` ([settings.py](src/pipecat/services/settings.py)) with runtime validation and delta support — you can update just one parameter without replacing the entire config.
 
 ### 9.2 LLMService
 
-📄 **Source**: [llm_service.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/llm_service.py)
+📄 **Source**: [llm_service.py](src/pipecat/services/llm_service.py)
 
 The most complex service type. Handles:
 
@@ -881,9 +881,9 @@ LLMContextFrame ──▶ LLMService ──▶ LLMFullResponseStartFrame
 For **reasoning models** (chain-of-thought), emit thought frames before the response:
 - `LLMThoughtStartFrame` → `LLMThoughtTextFrame`(s) → `LLMThoughtEndFrame`
 
-**The adapter pattern** ([adapters/](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/adapters)): Non-OpenAI LLM services declare an `adapter_class` to translate the universal OpenAI message format to their native format. For example, `AnthropicLLMService` uses `AnthropicLLMAdapter`. See [Section 18](#18-adapters-llm-format-translation) for details.
+**The adapter pattern** ([adapters/](src/pipecat/adapters)): Non-OpenAI LLM services declare an `adapter_class` to translate the universal OpenAI message format to their native format. For example, `AnthropicLLMService` uses `AnthropicLLMAdapter`. See [Section 18](#18-adapters-llm-format-translation) for details.
 
-**Function calling flow** ([llm_service.py — process_frame L557](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/llm_service.py#L557), [register_function L762](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/llm_service.py#L762)):
+**Function calling flow** ([llm_service.py — process_frame L557](src/pipecat/services/llm_service.py#L557), [register_function L762](src/pipecat/services/llm_service.py#L762)):
 1. LLM returns a tool call request
 2. Service looks up the registered function handler
 3. Pushes `FunctionCallInProgressFrame` downstream
@@ -892,7 +892,7 @@ For **reasoning models** (chain-of-thought), emit thought frames before the resp
 
 ### 9.3 STTService
 
-📄 **Source**: [stt_service.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/stt_service.py)
+📄 **Source**: [stt_service.py](src/pipecat/services/stt_service.py)
 
 Converts audio to text. Key features:
 - **VAD integration**: Only processes audio when someone is speaking
@@ -902,7 +902,7 @@ Converts audio to text. Key features:
 
 ### 9.4 TTSService
 
-📄 **Source**: [tts_service.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/tts_service.py)
+📄 **Source**: [tts_service.py](src/pipecat/services/tts_service.py)
 
 Converts text to audio. Key features:
 - **Text aggregation modes**: Sentence-level (waits for complete sentences) or Token-level (sends immediately)
@@ -931,7 +931,7 @@ Converts text to audio. Key features:
 
 ### 10.1 LLMContext — Conversation Memory
 
-📄 **Source**: [llm_context.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/processors/aggregators/llm_context.py)
+📄 **Source**: [llm_context.py](src/pipecat/processors/aggregators/llm_context.py)
 
 `LLMContext` is the **conversation memory** — it stores the message history sent to the LLM.
 
@@ -997,7 +997,7 @@ context_aggregator = llm.create_context_aggregator(
 
 ### 10.4 App Resources — Sharing State Across the Pipeline
 
-📄 **Source**: [worker.py — app_resources](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/worker.py)
+📄 **Source**: [worker.py — app_resources](src/pipecat/pipeline/worker.py)
 
 `app_resources` is a dictionary you attach to the `PipelineWorker` for sharing state across function call handlers and custom processors:
 
@@ -1024,7 +1024,7 @@ class MyProcessor(FrameProcessor):
 
 ## 11. Voice Activity Detection (VAD)
 
-📄 **Source**: [vad_analyzer.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/audio/vad/vad_analyzer.py)
+📄 **Source**: [vad_analyzer.py](src/pipecat/audio/vad/vad_analyzer.py)
 
 VAD determines **when someone is speaking**. It's the foundation of natural conversation — without it, the bot wouldn't know when to listen and when to respond.
 
@@ -1042,7 +1042,7 @@ VAD determines **when someone is speaking**. It's the foundation of natural conv
     └───────────────────────────────────────────────────────────────┘
 ```
 
-📄 [vad_analyzer.py L189-L243](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/audio/vad/vad_analyzer.py#L189-L243)
+📄 [vad_analyzer.py L189-L243](src/pipecat/audio/vad/vad_analyzer.py#L189-L243)
 
 ### 11.2 VADParams
 
@@ -1071,7 +1071,7 @@ class VADParams(BaseModel):
 
 ## 12. Turn Management
 
-📄 **Source**: [turns/](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/turns/user_turn_controller.py)
+📄 **Source**: [turns/](src/pipecat/turns/user_turn_controller.py)
 
 Turn management answers: **"When does the user start/stop talking, and what should happen?"**
 
@@ -1093,13 +1093,13 @@ Pipecat uses a **strategy pattern** for turn detection:
 └─────────────────────────────────┘
 ```
 
-📄 [user_turn_strategies.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/turns/user_turn_strategies.py)
+📄 [user_turn_strategies.py](src/pipecat/turns/user_turn_strategies.py)
 
-**Start strategies** ([user_start/](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/turns/user_start)):
+**Start strategies** ([user_start/](src/pipecat/turns/user_start)):
 - `VADUserTurnStartStrategy`: Uses VAD to detect speech onset → triggers interruption
 - Custom strategies can be written for button-press-to-talk, etc.
 
-**Stop strategies** ([user_stop/](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/turns/user_stop)):
+**Stop strategies** ([user_stop/](src/pipecat/turns/user_stop)):
 - `VADUserTurnStopStrategy`: Uses VAD silence detection
 - Can be combined with LLM-based endpoint detection
 
@@ -1120,7 +1120,7 @@ When the user starts speaking while the bot is still talking:
 
 ### 12.3 Idle Detection
 
-📄 [user_idle_controller.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/turns/user_idle_controller.py)
+📄 [user_idle_controller.py](src/pipecat/turns/user_idle_controller.py)
 
 Detects when the user hasn't spoken for a configurable period. Useful for:
 - Prompting "Are you still there?"
@@ -1130,7 +1130,7 @@ Detects when the user hasn't spoken for a configurable period. Useful for:
 
 ## 13. The Bus: Inter-Worker Communication
 
-📄 **Source**: [bus/](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/bus/bus.py) | [messages.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/bus/messages.py)
+📄 **Source**: [bus/](src/pipecat/bus/bus.py) | [messages.py](src/pipecat/bus/messages.py)
 
 When you have **multiple workers** (multi-agent setups), they communicate through the `WorkerBus`.
 
@@ -1152,7 +1152,7 @@ When you have **multiple workers** (multi-agent setups), they communicate throug
 
 ### 13.2 Message Types
 
-📄 [messages.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/bus/messages.py)
+📄 [messages.py](src/pipecat/bus/messages.py)
 
 All messages extend `BusMessage` with `source` and `target` fields. Two priority levels:
 
@@ -1184,7 +1184,7 @@ All messages extend `BusMessage` with `source` and `target` fields. Two priority
 
 ### 13.4 BusBridgeProcessor
 
-📄 [bridge_processor.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/bus/bridge_processor.py)
+📄 [bridge_processor.py](src/pipecat/bus/bridge_processor.py)
 
 Connects a pipeline to the bus. Frames entering the bridge are serialized and sent to other workers. Frames arriving from the bus are deserialized and injected into the local pipeline. This is how `bridged=True` workers exchange frames.
 
@@ -1192,7 +1192,7 @@ Connects a pipeline to the bus. Frames entering the bridge are serialized and se
 
 ## 14. Observers: Non-Intrusive Monitoring
 
-📄 **Source**: [base_observer.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/observers/base_observer.py)
+📄 **Source**: [base_observer.py](src/pipecat/observers/base_observer.py)
 
 Observers let you **watch** frames flowing through the pipeline without modifying the pipeline itself. They're attached to the `PipelineWorker`, not inserted into the processor chain.
 
@@ -1217,9 +1217,9 @@ class BaseObserver(BaseObject):
 
 | Observer | Purpose |
 |----------|---------|
-| [StartupTimingObserver](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/observers/startup_timing_observer.py) | Measures how long each processor takes to start up |
-| [UserBotLatencyObserver](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/observers/user_bot_latency_observer.py) | Measures end-to-end conversation latency |
-| [TurnTrackingObserver](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/observers/turn_tracking_observer.py) | Tracks conversation turns for analytics |
+| [StartupTimingObserver](src/pipecat/observers/startup_timing_observer.py) | Measures how long each processor takes to start up |
+| [UserBotLatencyObserver](src/pipecat/observers/user_bot_latency_observer.py) | Measures end-to-end conversation latency |
+| [TurnTrackingObserver](src/pipecat/observers/turn_tracking_observer.py) | Tracks conversation turns for analytics |
 
 ### 14.3 Using Observers
 
@@ -1239,7 +1239,7 @@ worker = PipelineWorker(
 
 ## 15. Serializers: Wire Formats
 
-📄 **Source**: [base_serializer.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/serializers/base_serializer.py)
+📄 **Source**: [base_serializer.py](src/pipecat/serializers/base_serializer.py)
 
 Serializers convert frames to/from wire formats for WebSocket-based transports. Each telephony provider has its own protocol.
 
@@ -1258,12 +1258,12 @@ class FrameSerializer(BaseObject):
 
 | Serializer | Provider | Encoding |
 |-----------|----------|----------|
-| [TwilioFrameSerializer](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/serializers/twilio.py) | Twilio | μ-law 8kHz |
-| [PlivoFrameSerializer](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/serializers/plivo.py) | Plivo | μ-law/PCM |
-| [VonageFrameSerializer](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/serializers/vonage.py) | Vonage | PCM 16kHz |
-| [TelnyxFrameSerializer](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/serializers/telnyx.py) | Telnyx | μ-law/PCM |
-| [ExotelFrameSerializer](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/serializers/exotel.py) | Exotel | μ-law |
-| [GenesysFrameSerializer](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/serializers/genesys.py) | Genesys | Various |
+| [TwilioFrameSerializer](src/pipecat/serializers/twilio.py) | Twilio | μ-law 8kHz |
+| [PlivoFrameSerializer](src/pipecat/serializers/plivo.py) | Plivo | μ-law/PCM |
+| [VonageFrameSerializer](src/pipecat/serializers/vonage.py) | Vonage | PCM 16kHz |
+| [TelnyxFrameSerializer](src/pipecat/serializers/telnyx.py) | Telnyx | μ-law/PCM |
+| [ExotelFrameSerializer](src/pipecat/serializers/exotel.py) | Exotel | μ-law |
+| [GenesysFrameSerializer](src/pipecat/serializers/genesys.py) | Genesys | Various |
 
 Serializers handle the details of provider-specific WebSocket message formats, audio encoding (μ-law, PCM), sample rates, and metadata extraction.
 
@@ -1300,7 +1300,7 @@ User speaks ──▶ VAD detects voice ──▶ UserStartedSpeakingFrame (upst
 
 ### 16.3 Broadcasting Interruptions
 
-📄 [frame_processor.py — broadcast_interruption](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/processors/frame_processor.py#L718-L723)
+📄 [frame_processor.py — broadcast_interruption](src/pipecat/processors/frame_processor.py#L718-L723)
 
 Any processor can trigger an interruption by calling `broadcast_interruption()`:
 
@@ -1326,7 +1326,7 @@ The `InterruptionFrame` itself is a simple empty `SystemFrame` — it carries no
 
 ## 17. RTVI: Real-Time Voice Interface
 
-📄 **Source**: [rtvi.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/processors/frameworks/rtvi.py)
+📄 **Source**: [rtvi.py](src/pipecat/processors/frameworks/rtvi.py)
 
 RTVI (Real-Time Voice Interface) is a **protocol** bridging web clients and the pipeline. It lets front-end apps communicate with a Pipecat bot using structured messages instead of raw audio.
 
@@ -1364,7 +1364,7 @@ RTVI includes a **UI Agent Protocol** for voice agents that can see and drive a 
 - `ui-command` — Drive the UI (`scroll_to`, `highlight`, `click`, `set_input_value`, `select_text`)
 - `ui-job-group` — Stream progress of long-running job groups
 
-These are used by the [`UIWorker`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/ui) to build voice agents grounded in what the user is looking at.
+These are used by the [`UIWorker`](src/pipecat/workers/ui) to build voice agents grounded in what the user is looking at.
 
 ### 17.3 RTVI Versioning
 
@@ -1374,7 +1374,7 @@ The protocol version is tracked as `PROTOCOL_VERSION` in `rtvi.py`. The current 
 
 ## 18. Adapters: LLM Format Translation
 
-📄 **Source**: [adapters/](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/adapters)
+📄 **Source**: [adapters/](src/pipecat/adapters)
 
 Pipecat uses **OpenAI's message format** as the universal internal representation. When sending to non-OpenAI providers, an **adapter** translates on-the-fly.
 
@@ -1396,7 +1396,7 @@ Without adapters, every LLM service would need to implement its own message form
 
 ### 18.2 BaseLLMAdapter Interface
 
-📄 [base_llm_adapter.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/adapters/base_llm_adapter.py)
+📄 [base_llm_adapter.py](src/pipecat/adapters/base_llm_adapter.py)
 
 ```python
 class BaseLLMAdapter:
@@ -1417,7 +1417,7 @@ class AnthropicLLMService(LLMService):
     adapter_class = AnthropicLLMAdapter   # Handles Claude's message format
 ```
 
-Available adapters: `OpenAILLMAdapter` (default/identity), `AnthropicLLMAdapter`, `GeminiLLMAdapter`, `BedrockLLMAdapter`, and more under [`src/pipecat/adapters/services/`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/adapters/services).
+Available adapters: `OpenAILLMAdapter` (default/identity), `AnthropicLLMAdapter`, `GeminiLLMAdapter`, `BedrockLLMAdapter`, and more under [`src/pipecat/adapters/services/`](src/pipecat/adapters/services).
 
 ---
 
@@ -1438,7 +1438,7 @@ Pipecat's multi-worker system lets you build **multi-agent applications** where 
 
 ### 19.2 Handoff Pattern
 
-📄 **Example**: [local-handoff/](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/examples/multi-worker/local-handoff)
+📄 **Example**: [local-handoff/](examples/multi-worker/local-handoff)
 
 Two LLM workers share a transport pipeline. A `transfer_to_worker` tool lets the active worker hand control to a peer:
 
@@ -1464,7 +1464,7 @@ support = LLMContextWorker(
 
 ### 19.3 Parallel Fan-Out Pattern (Job Groups)
 
-📄 **Example**: [parallel-debate/](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/examples/multi-worker/parallel-debate)
+📄 **Example**: [parallel-debate/](examples/multi-worker/parallel-debate)
 
 One worker dispatches work to several peers simultaneously using `job_group()`:
 
@@ -1477,7 +1477,7 @@ async with self.job_group("advocate", "critic", "analyst") as group:
 
 ### 19.4 The `@job` Decorator
 
-📄 **Source**: [job_decorator.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/job_decorator.py)
+📄 **Source**: [job_decorator.py](src/pipecat/pipeline/job_decorator.py)
 
 Workers expose RPC-style handlers with `@job`:
 
@@ -1498,7 +1498,7 @@ async with self.job("my_worker", name="research") as job:
 
 ### 19.5 The `@tool` Decorator (LLMWorker)
 
-📄 **Source**: [tool_decorator.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/llm/tool_decorator.py)
+📄 **Source**: [tool_decorator.py](src/pipecat/workers/llm/tool_decorator.py)
 
 On an `LLMWorker`, methods marked `@tool` are auto-collected and registered with the LLM service:
 
@@ -1514,11 +1514,11 @@ class MyAgent(LLMWorker):
 
 | Worker | Base | Purpose |
 |--------|------|---------|
-| [`BaseWorker`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/base_worker.py) | — | Abstract base: lifecycle, bus, jobs |
-| [`PipelineWorker`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/worker.py) | `BaseWorker` | Wraps a pipeline + transport |
-| [`LLMWorker`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/llm) | `BaseWorker` | Adds `@tool` auto-collection |
-| [`LLMContextWorker`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/llm) | `LLMWorker` | Adds `LLMContext` + aggregator pair |
-| [`UIWorker`](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/ui) | `LLMContextWorker` | Drives web UI via RTVI snapshots |
+| [`BaseWorker`](src/pipecat/workers/base_worker.py) | — | Abstract base: lifecycle, bus, jobs |
+| [`PipelineWorker`](src/pipecat/pipeline/worker.py) | `BaseWorker` | Wraps a pipeline + transport |
+| [`LLMWorker`](src/pipecat/workers/llm) | `BaseWorker` | Adds `@tool` auto-collection |
+| [`LLMContextWorker`](src/pipecat/workers/llm) | `LLMWorker` | Adds `LLMContext` + aggregator pair |
+| [`UIWorker`](src/pipecat/workers/ui) | `LLMContextWorker` | Drives web UI via RTVI snapshots |
 
 ### 19.7 Distributed Workers
 
@@ -1531,12 +1531,12 @@ runner = WorkerRunner(bus=RedisBus(url="redis://localhost:6379"))
 ```
 
 Available network bus implementations:
-- **RedisBus** ([bus/network/redis](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/bus/network)) — Redis pub/sub
-- **PgmqBus** ([bus/network/pgmq](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/bus/network)) — PostgreSQL message queue (Supabase-friendly)
+- **RedisBus** ([bus/network/redis](src/pipecat/bus/network)) — Redis pub/sub
+- **PgmqBus** ([bus/network/pgmq](src/pipecat/bus/network)) — PostgreSQL message queue (Supabase-friendly)
 
 ### 19.8 Worker Registry & `@worker_ready`
 
-📄 **Source**: [registry/](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/registry)
+📄 **Source**: [registry/](src/pipecat/registry)
 
 The `WorkerRegistry` tracks which workers are active. Use `watch()` or the `@worker_ready` decorator to be notified when a named worker becomes available:
 
@@ -1552,7 +1552,7 @@ async def on_specialist_ready(self, worker_info):
 
 ## 20. Service Settings & Runtime Updates
 
-📄 **Source**: [settings.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/settings.py)
+📄 **Source**: [settings.py](src/pipecat/services/settings.py)
 
 Every AI service exposes a **Settings dataclass** that serves two roles:
 
@@ -1640,7 +1640,7 @@ Use Pipecat's built-in tracing for observability:
 
 ## 21. Testing Pipecat Code
 
-📄 **Source**: [tests/utils.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/tests/utils.py)
+📄 **Source**: [tests/utils.py](src/pipecat/tests/utils.py)
 
 ### 21.1 The `run_test()` Utility
 
@@ -1695,7 +1695,7 @@ uv run pytest tests/test_name.py::test_function_name
 
 ## 22. Contributing to Pipecat
 
-📄 **Source**: [CONTRIBUTING.md](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/CONTRIBUTING.md)
+📄 **Source**: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ### 22.1 Development Setup
 
@@ -1753,7 +1753,7 @@ git add pyproject.toml uv.lock
 
 ### 22.5 Community Integrations
 
-📄 **Source**: [COMMUNITY_INTEGRATIONS.md](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/COMMUNITY_INTEGRATIONS.md)
+📄 **Source**: [COMMUNITY_INTEGRATIONS.md](COMMUNITY_INTEGRATIONS.md)
 
 Want to add a new service (STT, TTS, LLM, etc.) without modifying the core? Create a community-maintained integration in a separate repository:
 
@@ -2047,14 +2047,14 @@ LLMFullResponseEndFrame          ← Response ends
 
 ### 📁 Key Files to Read First
 
-1. [frames.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/frames/frames.py) — Understand the data model
-2. [frame_processor.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/processors/frame_processor.py) — Understand the processing engine
-3. [pipeline.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/pipeline.py) — Understand how processors chain together
-4. [worker.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/pipeline/worker.py) — Understand the runtime wrapper
-5. [runner.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/runner.py) — Understand the entry point
-6. [llm_service.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/services/llm_service.py) — Understand LLM integration patterns
-7. [llm_context.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/processors/aggregators/llm_context.py) — Understand conversation memory
-8. [base_worker.py](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/src/pipecat/workers/base_worker.py) — Understand multi-worker architecture
+1. [frames.py](src/pipecat/frames/frames.py) — Understand the data model
+2. [frame_processor.py](src/pipecat/processors/frame_processor.py) — Understand the processing engine
+3. [pipeline.py](src/pipecat/pipeline/pipeline.py) — Understand how processors chain together
+4. [worker.py](src/pipecat/pipeline/worker.py) — Understand the runtime wrapper
+5. [runner.py](src/pipecat/workers/runner.py) — Understand the entry point
+6. [llm_service.py](src/pipecat/services/llm_service.py) — Understand LLM integration patterns
+7. [llm_context.py](src/pipecat/processors/aggregators/llm_context.py) — Understand conversation memory
+8. [base_worker.py](src/pipecat/workers/base_worker.py) — Understand multi-worker architecture
 
 ### 🐛 Common Pitfalls
 
@@ -2075,10 +2075,10 @@ LLMFullResponseEndFrame          ← Response ends
 
 | Goal | Resource |
 |------|----------|
-| Build your first voice bot | [Getting Started Examples](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/examples/getting-started) |
-| Build a multi-agent system | [Multi-Worker Examples](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/examples/multi-worker) |
-| Add a new AI service | [COMMUNITY_INTEGRATIONS.md](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/COMMUNITY_INTEGRATIONS.md) |
-| Contribute to the framework | [CONTRIBUTING.md](file:///media/nikki/Data/Projects/OpenSource/pipecat-ai/pipecat/CONTRIBUTING.md) |
+| Build your first voice bot | [Getting Started Examples](examples/getting-started) |
+| Build a multi-agent system | [Multi-Worker Examples](examples/multi-worker) |
+| Add a new AI service | [COMMUNITY_INTEGRATIONS.md](COMMUNITY_INTEGRATIONS.md) |
+| Contribute to the framework | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Debug a pipeline | [Whisker](https://github.com/pipecat-ai/whisker) or [Tail](https://github.com/pipecat-ai/tail) |
 | Read the official docs | [docs.pipecat.ai](https://docs.pipecat.ai) |
 | Get help | [Discord](https://discord.gg/pipecat) |
