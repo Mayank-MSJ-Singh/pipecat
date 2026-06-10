@@ -62,7 +62,7 @@ Think of it like a factory assembly line:
 
 ## 2. Project Structure
 
-All source code lives under [`src/pipecat/`](src/pipecat/__init__.py).
+All source code lives under [`src/pipecat/`](src/pipecat).
 
 ```
 src/pipecat/
