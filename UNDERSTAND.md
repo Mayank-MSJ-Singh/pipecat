@@ -1020,6 +1020,68 @@ class MyProcessor(FrameProcessor):
 
 > **Note**: The old name `tool_resources` is deprecated as of 1.2.0. Use `app_resources` instead.
 
+### 10.5 Tool & Function Calling: Traditional vs. Modern Direct Functions
+
+📄 **Source**: [direct_function.py](src/pipecat/adapters/schemas/direct_function.py), [llm_service.py — _auto_register_direct_functions L847](src/pipecat/services/llm_service.py#L847)
+
+Function calling allows the LLM to trigger external operations (like querying a database, looking up the weather, or ending a call). Pipecat supports two paradigms for declaring and registering tools.
+
+#### 1. Traditional Function Calling (Manual Declaration)
+In the traditional flow, you declare the schema manually and then register the handler on the LLM service:
+
+```python
+from pipecat.adapters.schemas.function_schema import FunctionSchema
+
+# 1. Define the schema of the tool manually
+weather_schema = FunctionSchema(
+    name="get_weather",
+    description="Get current weather for a city",
+    properties={
+        "city": {"type": "string", "description": "The city and state, e.g. San Francisco, CA"}
+    },
+    required=["city"]
+)
+
+# 2. Add schema to context
+context = LLMContext(
+    messages=[...],
+    tools=ToolsSchema(standard_tools=[weather_schema])
+)
+
+# 3. Define the handler
+async def get_weather_handler(params: FunctionCallParams, city: str):
+    await params.result_callback({"temperature": "72F"})
+
+# 4. Register the handler explicitly on the service
+llm.register_function("get_weather", get_weather_handler)
+```
+
+#### 2. Modern Direct Function Calling (Auto-Extraction)
+Direct functions allow you to write standard Python functions and pass them directly to the `LLMContext`'s `tools` parameter. Pipecat automatically parses their parameter signatures and Google-style docstrings at runtime to extract names, descriptions, parameter types, and required statuses.
+
+```python
+from pipecat.services.llm_service import FunctionCallParams
+from pipecat.adapters.schemas.direct_function import direct_function
+
+# 1. Define the handler with type hints and docstring
+@direct_function(cancel_on_interruption=True, timeout=10.0)
+async def get_weather(params: FunctionCallParams, city: str):
+    """Get current weather for a city.
+
+    Args:
+        city (str): The city and state, e.g. San Francisco, CA
+    """
+    await params.result_callback({"temperature": "72F"})
+
+# 2. Simply pass the function inside tools — registration is automatic!
+context = LLMContext(tools=[get_weather])
+```
+
+> [!NOTE]
+> *   **First Argument**: The first argument of a direct function must be named `params` and typed `FunctionCallParams`.
+> *   **Auto-Registration**: When the `LLMService` receives an `LLMContextFrame`, it automatically calls `self._auto_register_direct_functions(context)` to register any direct functions present in the context tools.
+> *   **Renaming decorator**: In recent releases (v1.3.0+), the `@direct_function` decorator is being transitioned to `@tool_options` to make its configuration-only intent clearer, while `@tool` is reserved for subclass methods on `LLMWorker`.
+
 ---
 
 ## 11. Voice Activity Detection (VAD)
